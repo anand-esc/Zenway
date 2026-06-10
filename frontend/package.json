@@ -1,0 +1,6 @@
+{
+  "name": "zenway-frontend",
+  "version": "0.1.0",
+  "description": "Frontend components for the Zenway Railway Platform",
+  "private": true
+}
