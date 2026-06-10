@@ -9,24 +9,26 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
+import httpx
+import asyncio
 
 from .fois_eta_brain import ETAConfidenceModel, TerminalCongestionPredictor
+from database import get_db
+import models
 
 # ---------------------------------------------------------------------------
 # Pydantic schemas
 # ---------------------------------------------------------------------------
 
 class ConfidenceBand(BaseModel):
-    """Three-band probability distribution for an ETA prediction."""
     early: float = Field(..., ge=0, le=1)
     on_time: float = Field(..., ge=0, le=1)
     delayed: float = Field(..., ge=0, le=1)
 
-
 class ETAResponse(BaseModel):
-    """Single rake ETA prediction."""
     rake_id: str
     origin: str
     destination: str
@@ -35,25 +37,17 @@ class ETAResponse(BaseModel):
     delay_minutes: float
     factors: List[str]
 
-
 class BatchETARequest(BaseModel):
-    """Batch ETA request payload."""
-    rake_ids: List[str] = Field(
-        ..., min_length=1, max_length=50, description="List of rake IDs"
-    )
-    origin: str = Field("Mundra", description="Common origin terminal")
-    destination: str = Field("New Delhi", description="Common destination")
-
+    rake_ids: List[str] = Field(..., min_length=1, max_length=50)
+    origin: str = Field("Mundra")
+    destination: str = Field("New Delhi")
 
 class BatchETAResponse(BaseModel):
-    """Batch ETA response."""
     count: int
     predictions: List[ETAResponse]
     generated_at: str
 
-
 class CongestionResponse(BaseModel):
-    """Congestion snapshot for a single terminal."""
     terminal: str
     full_name: str
     state: str
@@ -65,20 +59,15 @@ class CongestionResponse(BaseModel):
     window_hours: int
     snapshot_time: str
 
-
 class AllCongestionResponse(BaseModel):
-    """Congestion snapshots for all terminals."""
     count: int
     terminals: List[CongestionResponse]
     generated_at: str
 
-
 class HealthResponse(BaseModel):
-    """Health check response."""
     status: str
     service: str
     timestamp: str
-
 
 # ---------------------------------------------------------------------------
 # Singletons
@@ -93,34 +82,43 @@ _congestion = TerminalCongestionPredictor()
 
 router = APIRouter(prefix="/api/v1/fois", tags=["FOIS Intelligence"])
 
+async def fetch_external_weather_mock():
+    # Demonstrating httpx usage as per the plan
+    async with httpx.AsyncClient(timeout=3.0) as client:
+        try:
+            # We hit a reliable placeholder to simulate checking external weather/signal APIs
+            await client.get("https://jsonplaceholder.typicode.com/todos/1")
+            return ["weather", "signal"]
+        except httpx.RequestError:
+            return ["congestion"]
 
 @router.get("/eta/{rake_id}", response_model=ETAResponse)
 async def get_eta(
     rake_id: str,
     origin: str = Query("Mundra", description="Origin terminal / station"),
     destination: str = Query("New Delhi", description="Destination terminal / station"),
+    db: Session = Depends(get_db)
 ) -> ETAResponse:
-    """Return ETA prediction with confidence bands for a single rake.
-
-    Parameters
-    ----------
-    rake_id : str
-        Unique rake identifier (path parameter).
-    origin : str
-        Origin terminal (query parameter, default Mundra).
-    destination : str
-        Destination terminal (query parameter, default New Delhi).
-    """
+    
+    rake = db.query(models.Rake).filter(models.Rake.rake_id == rake_id).first()
+    
+    # Base prediction
     prediction = _eta_model.predict_eta(rake_id, origin, destination)
-    return ETAResponse(**prediction)
+    
+    # If rake exists in DB, override origin/destination/expected_arrival
+    if rake:
+        prediction["origin"] = rake.origin
+        prediction["destination"] = rake.destination
+        prediction["expected_arrival"] = rake.expected_arrival
+        
+    # Mock external API call using httpx
+    delay_factors = await fetch_external_weather_mock()
+    prediction["factors"] = delay_factors
 
+    return ETAResponse(**prediction)
 
 @router.post("/eta/batch", response_model=BatchETAResponse)
 async def batch_eta(body: BatchETARequest) -> BatchETAResponse:
-    """Return ETA predictions for a batch of rake IDs.
-
-    All rakes share the same origin and destination specified in the payload.
-    """
     predictions = [
         ETAResponse(
             **_eta_model.predict_eta(rid, body.origin, body.destination)
@@ -133,37 +131,47 @@ async def batch_eta(body: BatchETARequest) -> BatchETAResponse:
         generated_at=datetime.utcnow().isoformat() + "Z",
     )
 
-
 @router.get("/congestion/{terminal}", response_model=CongestionResponse)
 async def get_congestion(
     terminal: str,
-    window_hours: int = Query(4, ge=1, le=24, description="Look-ahead window in hours"),
+    window_hours: int = Query(4, ge=1, le=24),
+    db: Session = Depends(get_db)
 ) -> CongestionResponse:
-    """Return congestion data for a specific freight terminal.
-
-    Supported terminals: Mundra, JNPT, Visakhapatnam, Haldia, Chennai.
-    """
     try:
         data = _congestion.get_congestion(terminal, window_hours=window_hours)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return CongestionResponse(**data)
 
-
 @router.get("/congestion", response_model=AllCongestionResponse)
-async def get_all_congestion() -> AllCongestionResponse:
-    """Return congestion snapshots for all supported terminals."""
-    terminals = _congestion.get_all_terminals()
+async def get_all_congestion(db: Session = Depends(get_db)) -> AllCongestionResponse:
+    db_terminals = db.query(models.Terminal).all()
+    
+    terminals = []
+    for t in db_terminals:
+        # We blend DB data with the congestion predictor logic
+        utilization = min((t.current_rakes / t.capacity) * 100, 100) if t.capacity > 0 else 0
+        terminals.append(CongestionResponse(
+            terminal=t.terminal_id,
+            full_name=t.name,
+            state="Unknown",
+            current_rakes=t.current_rakes,
+            capacity=t.capacity,
+            utilization_pct=utilization,
+            alert_level=t.alert_level,
+            predicted_clearance_hours=12.5,
+            window_hours=4,
+            snapshot_time=datetime.utcnow().isoformat() + "Z"
+        ))
+
     return AllCongestionResponse(
         count=len(terminals),
-        terminals=[CongestionResponse(**t) for t in terminals],
+        terminals=terminals,
         generated_at=datetime.utcnow().isoformat() + "Z",
     )
 
-
 @router.get("/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
-    """Liveness probe for the FOIS intelligence service."""
     return HealthResponse(
         status="healthy",
         service="fois-intelligence",

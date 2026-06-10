@@ -11,6 +11,19 @@ cd d:\Projects\Zenway
 pip install -r backend/requirements.txt
 ```
 
+### 🔑 Bhashini API Configuration
+
+To enable real-time local language translations for the Layover Concierge via the Bhashini ULCA API:
+
+1. Register at the [Bhashini Udyat Dashboard](https://dashboard.bhashini.co.in/).
+2. Copy `backend/.env.example` to `backend/.env`.
+3. Add your unique keys (`ulcaApiKey`, `userID`, `Authorization` token, and `serviceId` for NMT).
+
+```bash
+cp backend/.env.example backend/.env
+# Edit backend/.env with your credentials
+```
+
 ## 🚀 Running the Application
 
 ```bash

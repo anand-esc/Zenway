@@ -147,7 +147,7 @@ async def create_itinerary(body: ItineraryRequest) -> ItineraryResponse:
     a time-boxed activity plan within the station geofence.
     """
     try:
-        result = _concierge.generate_itinerary(
+        result = await _concierge.generate_itinerary(
             pnr=body.pnr,
             station=body.station,
             layover_minutes=body.layover_minutes,

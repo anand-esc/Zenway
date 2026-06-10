@@ -227,7 +227,7 @@ class LayoverConcierge:
 
     # ---- public API -------------------------------------------------------
 
-    def generate_itinerary(
+    async def generate_itinerary(
         self,
         pnr: str,
         station: str,
@@ -294,7 +294,7 @@ class LayoverConcierge:
         activities.append({
             "order": len(activities) + 1,
             "type": "food",
-            "name": self.translate_text(nearest_food["name"], language),
+            "name": await self.translate_text(nearest_food["name"], language),
             "start_minute": time_cursor,
             "duration_minutes": food_time,
             "distance_km": nearest_food["distance_km"],
@@ -319,8 +319,8 @@ class LayoverConcierge:
             activities.append({
                 "order": len(activities) + 1,
                 "type": "sightseeing",
-                "name": self.translate_text(attraction["name"], language),
-                "description": self.translate_text(desc, language),
+                "name": await self.translate_text(attraction["name"], language),
+                "description": await self.translate_text(desc, language),
                 "start_minute": time_cursor,
                 "duration_minutes": needed,
                 "distance_km": attraction["distance_km"],
@@ -332,7 +332,7 @@ class LayoverConcierge:
         activities.append({
             "order": len(activities) + 1,
             "type": "buffer",
-            "name": self.translate_text("Return to station & boarding", language),
+            "name": await self.translate_text("Return to station & boarding", language),
             "start_minute": time_cursor,
             "duration_minutes": 15,
             "distance_km": 0.0,
@@ -362,7 +362,7 @@ class LayoverConcierge:
             "activities": activities,
             "medical_facilities": medical,
             "total_planned_minutes": time_cursor + 15,
-            "safety_notes": self.translate_text(
+            "safety_notes": await self.translate_text(
                 "Keep your ticket and ID handy. Do not leave luggage unattended. "
                 "Return to the platform at least 15 minutes before departure.",
                 language,
@@ -371,27 +371,20 @@ class LayoverConcierge:
         }
         return itinerary
 
-    def translate_text(self, text: str, target_lang: str) -> str:
-        """Mock Bhashini-style translation.
-
-        For ``en`` the text is returned as-is.  For other languages a
-        tagged wrapper is returned to simulate a translation API response.
-
-        Parameters
-        ----------
-        text : str
-            Source text in English.
-        target_lang : str
-            ISO 639-1 language code.
-
-        Returns
-        -------
-        str
-            Translated (or mock-translated) text.
-        """
+    async def translate_text(self, text: str, target_lang: str) -> str:
+        """Real Bhashini translation via ULCA network call."""
         if target_lang == "en":
             return text
 
+        import os
+        from dotenv import load_dotenv
+        load_dotenv()
+
+        BHASHINI_API_KEY = os.getenv("BHASHINI_API_KEY")
+        BHASHINI_USER_ID = os.getenv("BHASHINI_USER_ID")
+        BHASHINI_AUTH_TOKEN = os.getenv("BHASHINI_AUTH_TOKEN")
+        BHASHINI_PIPELINE_ID = os.getenv("BHASHINI_PIPELINE_ID")
+        
         lang_names = {
             "hi": "Hindi",
             "bn": "Bengali",
@@ -401,7 +394,53 @@ class LayoverConcierge:
             "kn": "Kannada",
         }
         label = lang_names.get(target_lang, target_lang.upper())
-        return f"[{label}] {text}"
+
+        if not all([BHASHINI_API_KEY, BHASHINI_USER_ID, BHASHINI_AUTH_TOKEN, BHASHINI_PIPELINE_ID]):
+            return f"[{label} - Missing Keys] {text}"
+            
+        headers = {
+            "ulcaApiKey": BHASHINI_API_KEY,
+            "userID": BHASHINI_USER_ID,
+            "Authorization": BHASHINI_AUTH_TOKEN,
+            "Content-Type": "application/json"
+        }
+        
+        import httpx
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            try:
+                compute_url = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
+                
+                payload = {
+                    "pipelineTasks": [
+                        {
+                            "taskType": "translation",
+                            "config": {
+                                "language": {
+                                    "sourceLanguage": "en",
+                                    "targetLanguage": target_lang
+                                },
+                                "serviceId": BHASHINI_PIPELINE_ID
+                            }
+                        }
+                    ],
+                    "inputData": {
+                        "input": [
+                            {"source": text}
+                        ]
+                    }
+                }
+                
+                resp = await client.post(compute_url, headers=headers, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    translated = data["pipelineResponse"][0]["output"][0]["target"]
+                    return translated
+                else:
+                    print(f"Bhashini API Error {resp.status_code}: {resp.text}")
+                    return f"[{label} - API Error] {text}"
+            except Exception as e:
+                print(f"Bhashini Network Error: {e}")
+                return f"[{label} - Network Error] {text}"
 
     # ---- helper -----------------------------------------------------------
 

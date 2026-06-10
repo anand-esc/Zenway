@@ -9,7 +9,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .feature2 import crew_router, fois_router, concierge_router
+from feature2 import crew_router, fois_router, concierge_router
 
 app = FastAPI(
     title="Zenway Railway Platform API",
