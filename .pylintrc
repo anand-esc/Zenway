@@ -1,0 +1,29 @@
+[MASTER]
+ignore=__pycache__, migrations
+init-hook='import sys; sys.path.append("backend")'
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    line-too-long,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-locals,
+    too-many-statements,
+    invalid-name,
+    import-error,
+    redefined-outer-name,
+    unused-import,
+    broad-exception-caught,
+    wrong-import-order,
+    no-else-return,
+    unused-argument,
+    duplicate-code,
+    trailing-whitespace,
+    import-outside-toplevel,
+    ungrouped-imports
+
+[REPORTS]
+output-format=text
