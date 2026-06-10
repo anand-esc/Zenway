@@ -196,6 +196,14 @@ def predict_fatigue(
 ) -> float:
     """Load the persisted model and return a fatigue score.
 
+    The ML model (LightGBM) predicts the fatigue score based on 6 key variables:
+    - Shift Duration: Hours driving (requires constant vigilance).
+    - Consecutive Days: Days worked without a 24h break (cumulative exhaustion).
+    - Hours Since Rest: Time since last 8h sleep block.
+    - Night Shift Penalty: Disruption to circadian rhythm (10 PM - 5 AM).
+    - Ambient Temperature: Extreme locomotive cabin heat drains energy.
+    - Route Complexity: Difficulty of route (1-5 scale).
+
     Parameters
     ----------
     features : dict
