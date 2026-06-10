@@ -57,14 +57,14 @@ export default function ItineraryTimelineItem({
       </div>
 
       {/* Content */}
-      <div className={`pb-8 ${isLast ? 'pb-0' : ''}`}>
+      <div className={`pb-10 w-full ${isLast ? 'pb-0' : ''}`}>
         {/* Time badge */}
         <span className="inline-block rounded-md bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
           {timeSlot}
         </span>
 
         {/* Activity card */}
-        <div className="mt-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+        <div className="mt-3 rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow">
           <div className="flex items-start gap-3">
             <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${config.bg}`}>
               <Icon className={`h-4.5 w-4.5 ${config.color}`} size={18} />

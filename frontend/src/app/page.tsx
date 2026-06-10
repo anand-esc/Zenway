@@ -1,44 +1,103 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { LayoutDashboard, TrainTrack, Smartphone, Train } from 'lucide-react';
 import {
   CrewPulseDashboard,
   FoisEtaTracker,
   LayoverConciergePWA,
 } from '@/components/feature2';
 
-export default function Feature2Showcase() {
+type TabType = 'crew' | 'fois' | 'concierge';
+
+export default function ZenwayDashboard() {
+  const [activeTab, setActiveTab] = useState<TabType>('crew');
+
   return (
-    <main className="min-h-screen bg-slate-50 p-6 sm:p-10">
-      <div className="mx-auto max-w-7xl space-y-10">
-        
-        {/* Header */}
-        <div className="border-b border-slate-200 pb-5">
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">
-            Feature 2: Ops & Crew Intelligence
-          </h1>
-          <p className="mt-2 text-slate-500">
-            Showcase dashboard rendering the standalone React components for Crew Management, FOIS ETA Tracking, and the Layover Concierge.
-          </p>
-        </div>
-
-        {/* Components Showcase */}
-        <section className="space-y-6">
-          <h2 className="text-xl font-semibold text-slate-700">1. Crew Pulse Monitor</h2>
-          <CrewPulseDashboard />
-        </section>
-
-        <section className="space-y-6">
-          <h2 className="text-xl font-semibold text-slate-700">2. FOIS Freight Tracker</h2>
-          <FoisEtaTracker />
-        </section>
-
-        <section className="space-y-6">
-          <h2 className="text-xl font-semibold text-slate-700">3. Layover Concierge (Mobile Simulator)</h2>
-          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-            <LayoverConciergePWA />
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      
+      {/* Top Header & Navigation */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+          <div className="flex items-center justify-between h-16 border-b border-slate-100">
+            <div className="flex items-center">
+              <Train className="w-6 h-6 text-indigo-600 mr-2" />
+              <span className="text-xl font-bold text-slate-800 tracking-tight">Zenway.</span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-600">
+              AD
+            </div>
           </div>
-        </section>
+          
+          {/* Tabs */}
+          <nav className="flex space-x-8 mt-2 overflow-x-auto no-scrollbar relative z-10">
+            <button
+              type="button"
+              onClick={() => setActiveTab('crew')}
+              className={`flex items-center pb-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'crew'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Crew Pulse Monitor
+            </button>
 
-      </div>
-    </main>
+            <button
+              type="button"
+              onClick={() => setActiveTab('fois')}
+              className={`flex items-center pb-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'fois'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <TrainTrack className="w-4 h-4 mr-2" />
+              FOIS Freight Tracker
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('concierge')}
+              className={`flex items-center pb-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'concierge'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              }`}
+            >
+              <Smartphone className="w-4 h-4 mr-2" />
+              Layover Concierge
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-auto p-6 sm:p-8">
+        <div className="max-w-7xl mx-auto">
+          {activeTab === 'crew' && (
+            <div className="animate-in fade-in duration-300">
+              <CrewPulseDashboard />
+            </div>
+          )}
+          
+          {activeTab === 'fois' && (
+            <div className="animate-in fade-in duration-300">
+              <FoisEtaTracker />
+            </div>
+          )}
+          
+          {activeTab === 'concierge' && (
+            <div className="animate-in fade-in duration-300 flex justify-center">
+              <div className="w-full max-w-md mt-4">
+                <LayoverConciergePWA />
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+
+    </div>
   );
 }

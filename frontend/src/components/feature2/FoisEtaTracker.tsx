@@ -150,11 +150,11 @@ export default function FoisEtaTracker({
       </div>
 
       {/* Rake ETA Cards */}
-      <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 p-8 sm:grid-cols-2 lg:grid-cols-3">
         {rakes.map((rake) => (
           <div
             key={rake.rakeId}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:shadow-md"
+            className="flex flex-col rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow"
           >
             {/* Rake header */}
             <div className="mb-3 flex items-center justify-between">
@@ -186,25 +186,19 @@ export default function FoisEtaTracker({
               <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
                 Confidence Band
               </p>
-              <div className="flex h-5 w-full overflow-hidden rounded-full">
+              <div className="flex h-2 w-full overflow-hidden rounded-full">
                 <div
-                  className="flex items-center justify-center bg-blue-400 text-[10px] font-bold text-white"
+                  className="bg-blue-300"
                   style={{ width: `${rake.confidence.early}%` }}
-                >
-                  {rake.confidence.early >= 10 && `${rake.confidence.early}%`}
-                </div>
+                />
                 <div
-                  className="flex items-center justify-center bg-emerald-500 text-[10px] font-bold text-white"
+                  className="bg-emerald-400"
                   style={{ width: `${rake.confidence.onTime}%` }}
-                >
-                  {rake.confidence.onTime >= 10 && `${rake.confidence.onTime}%`}
-                </div>
+                />
                 <div
-                  className="flex items-center justify-center bg-rose-400 text-[10px] font-bold text-white"
+                  className="bg-rose-400"
                   style={{ width: `${rake.confidence.delayed}%` }}
-                >
-                  {rake.confidence.delayed >= 10 && `${rake.confidence.delayed}%`}
-                </div>
+                />
               </div>
               <div className="mt-1 flex justify-between text-[10px] text-slate-400">
                 <span>Early</span>
@@ -237,13 +231,13 @@ export default function FoisEtaTracker({
       </div>
 
       {/* Terminal Congestion */}
-      <div className="border-t border-slate-200 px-6 py-5">
-        <div className="mb-4 flex items-center gap-2">
+      <div className="border-t border-slate-100 bg-slate-50/50 px-8 py-8 rounded-b-xl">
+        <div className="mb-5 flex items-center gap-2">
           <Warehouse className="h-5 w-5 text-indigo-600" />
           <h3 className="text-base font-bold text-slate-800">Terminal Congestion</h3>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {terminals.map((terminal) => {
             const utilization = Math.round((terminal.currentRakes / terminal.capacity) * 100);
             const styles = alertLevelStyles[terminal.alertLevel];
@@ -251,7 +245,7 @@ export default function FoisEtaTracker({
             return (
               <div
                 key={terminal.id}
-                className="rounded-lg border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:shadow-sm"
+                className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow"
               >
                 <div className="mb-2 flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-slate-800">{terminal.name}</h4>

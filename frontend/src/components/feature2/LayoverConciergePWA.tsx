@@ -115,7 +115,7 @@ export default function LayoverConciergePWA({
 
   return (
     <div className="mx-auto max-w-md">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+      <div className="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm ring-1 ring-slate-900/5">
         {/* Header */}
         <div className="bg-indigo-600 px-6 py-5">
           <div className="flex items-center gap-2.5">
@@ -128,7 +128,7 @@ export default function LayoverConciergePWA({
         </div>
 
         {/* Input Section */}
-        <div className="space-y-4 border-b border-slate-200 px-6 py-5">
+        <div className="space-y-5 border-b border-slate-100 px-8 py-6">
           {/* PNR Input */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-700">
@@ -202,7 +202,7 @@ export default function LayoverConciergePWA({
 
         {/* Results Section */}
         {itinerary && (
-          <div className="px-6 py-5">
+          <div className="px-8 py-6">
             {/* Station header */}
             <div className="mb-5 rounded-lg border border-indigo-100 bg-indigo-50 p-3">
               <h3 className="text-sm font-bold text-indigo-900">{itinerary.stationName}</h3>

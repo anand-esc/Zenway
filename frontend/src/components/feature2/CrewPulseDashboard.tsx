@@ -95,10 +95,10 @@ export default function CrewPulseDashboard({
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
       {/* Alert Banner */}
       {criticalPilots.length > 0 && (
-        <div className="flex items-center gap-3 rounded-t-xl border-b border-rose-200 bg-rose-50 px-6 py-3">
+        <div className="flex items-center gap-3 rounded-t-xl border-b border-rose-100 bg-rose-50/80 px-8 py-4">
           <AlertTriangle className="h-5 w-5 shrink-0 text-rose-600" />
-          <p className="text-sm font-medium text-rose-800">
-            <span className="font-bold">{criticalPilots.length} pilot{criticalPilots.length > 1 ? 's' : ''}</span>{' '}
+          <p className="text-sm text-rose-800">
+            <span className="font-semibold">{criticalPilots.length} pilot{criticalPilots.length > 1 ? 's' : ''}</span>{' '}
             with fatigue score &gt; 80 — immediate swap recommended:{' '}
             {criticalPilots.map((p) => p.name).join(', ')}
           </p>
@@ -126,21 +126,21 @@ export default function CrewPulseDashboard({
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 gap-4 px-6 py-5 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 px-8 py-6 lg:grid-cols-4 bg-slate-50/50 border-b border-slate-100">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-lg border border-slate-200 bg-slate-50 p-4 transition-all duration-200 hover:shadow-sm"
+            className="flex flex-col rounded-xl bg-white p-5 shadow-sm border border-slate-100 transition-all duration-200 hover:shadow"
           >
-            <div className="flex items-center gap-2">
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${stat.bg}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${stat.bg}`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <span className="text-sm font-medium text-slate-500">
                 {stat.label}
               </span>
             </div>
-            <p className="mt-2 text-2xl font-bold text-slate-800">{stat.value}</p>
+            <p className="text-3xl font-semibold text-slate-800 tracking-tight">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -180,33 +180,33 @@ export default function CrewPulseDashboard({
             {pilots.map((pilot) => (
               <tr
                 key={pilot.id}
-                className="transition-all duration-200 hover:bg-slate-50"
+                className="transition-all duration-200 hover:bg-slate-50/60 group"
               >
-                <td className="px-3 py-3 text-sm font-mono font-medium text-slate-700">
+                <td className="px-3 py-5 text-sm font-mono font-medium text-slate-600">
                   {pilot.id}
                 </td>
-                <td className="px-3 py-3 text-sm font-medium text-slate-800">
+                <td className="px-3 py-5 text-sm font-medium text-slate-800">
                   {pilot.name}
                 </td>
-                <td className="px-3 py-3 text-sm text-slate-600">
+                <td className="px-3 py-5 text-sm text-slate-500">
                   {pilot.currentRoute}
                 </td>
-                <td className="px-3 py-3 text-right text-sm text-slate-700">
+                <td className="px-3 py-5 text-right text-sm text-slate-600">
                   {pilot.shiftHours}h
                 </td>
-                <td className="px-3 py-3 text-right text-sm text-slate-700">
+                <td className="px-3 py-5 text-right text-sm text-slate-600">
                   {pilot.consecutiveDays}
                 </td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-3 py-5 text-center">
                   {fatigueBadge(pilot.fatigueScore)}
                 </td>
-                <td className="px-3 py-3 text-center">
+                <td className="px-3 py-5 text-center">
                   {statusBadge(pilot.status)}
                 </td>
-                <td className="px-3 py-3 text-right">
+                <td className="px-3 py-5 text-right">
                   <button
                     onClick={() => onRequestSwap(pilot.id)}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-indigo-700 hover:shadow"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-white px-3 py-1.5 text-xs font-medium text-indigo-600 shadow-sm border border-slate-200 transition-all duration-200 hover:border-indigo-200 hover:bg-indigo-50 opacity-0 group-hover:opacity-100 focus:opacity-100"
                   >
                     <ArrowRightLeft className="h-3 w-3" />
                     Request Swap
