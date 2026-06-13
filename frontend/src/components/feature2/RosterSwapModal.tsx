@@ -8,9 +8,6 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   ShieldCheck,
-  Clock,
-  MapPin,
-  Award,
 } from 'lucide-react';
 
 export interface PilotSwapInfo {
@@ -44,9 +41,9 @@ export interface ValidationResult {
 export interface RosterSwapModalProps {
   isOpen?: boolean;
   onClose?: () => void;
-  onConfirm?: (swapId: string) => void;
+  onConfirm?: (replacementPilot: ReplacementPilotInfo) => void;
   fatiguedPilot?: PilotSwapInfo;
-  replacementPilot?: ReplacementPilotInfo;
+  replacementPilots?: ReplacementPilotInfo[];
   validationResult?: ValidationResult;
 }
 
@@ -59,14 +56,24 @@ const defaultFatiguedPilot: PilotSwapInfo = {
   consecutiveDays: 5,
 };
 
-const defaultReplacementPilot: ReplacementPilotInfo = {
-  id: 'LP-2047',
-  name: 'Abhishek Verma',
-  fatigueScore: 22,
-  station: 'New Delhi Loco Shed',
-  availabilityEta: '35 minutes',
-  certificationLevel: 'A1',
-};
+const defaultReplacementPilots: ReplacementPilotInfo[] = [
+  {
+    id: 'LP-2047',
+    name: 'Abhishek Verma',
+    fatigueScore: 22,
+    station: 'New Delhi Loco Shed',
+    availabilityEta: '35 minutes',
+    certificationLevel: 'A1',
+  },
+  {
+    id: 'LP-2104',
+    name: 'Neha Sharma',
+    fatigueScore: 18,
+    station: 'Delhi Cantt Depot',
+    availabilityEta: '45 minutes',
+    certificationLevel: 'A1',
+  }
+];
 
 const defaultValidationResult: ValidationResult = {
   overallPass: true,
@@ -84,12 +91,12 @@ export default function RosterSwapModal({
   onClose = () => {},
   onConfirm = () => {},
   fatiguedPilot = defaultFatiguedPilot,
-  replacementPilot = defaultReplacementPilot,
+  replacementPilots = defaultReplacementPilots,
   validationResult = defaultValidationResult,
 }: RosterSwapModalProps) {
-  if (!isOpen) return null;
+  const [selectedPilotId, setSelectedPilotId] = React.useState<string>(replacementPilots[0]?.id || '');
 
-  const swapId = `SWAP-${fatiguedPilot.id}-${replacementPilot.id}`;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -148,51 +155,47 @@ export default function RosterSwapModal({
             </div>
           </div>
 
-          {/* Replacement Pilot */}
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-            <div className="mb-2 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <h3 className="text-sm font-semibold text-emerald-800">Recommended Replacement</h3>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Name</span>
-                <span className="text-sm font-medium text-slate-800">{replacementPilot.name}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">ID</span>
-                <span className="font-mono text-sm text-slate-700">{replacementPilot.id}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Fatigue Score</span>
-                <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
-                  {replacementPilot.fatigueScore}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">
-                  <MapPin className="mr-1 inline h-3.5 w-3.5" />
-                  Station
-                </span>
-                <span className="text-sm font-medium text-slate-800">{replacementPilot.station}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">
-                  <Clock className="mr-1 inline h-3.5 w-3.5" />
-                  Availability ETA
-                </span>
-                <span className="text-sm font-medium text-slate-800">{replacementPilot.availabilityEta}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">
-                  <Award className="mr-1 inline h-3.5 w-3.5" />
-                  Certification
-                </span>
-                <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
-                  Level {replacementPilot.certificationLevel}
-                </span>
-              </div>
-            </div>
+          {/* Replacement Pilots */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-slate-700">Available Replacements</h3>
+            {replacementPilots.map((pilot) => {
+              const isSelected = selectedPilotId === pilot.id;
+              return (
+                <button
+                  key={pilot.id}
+                  onClick={() => setSelectedPilotId(pilot.id)}
+                  className={`w-full text-left rounded-lg border p-4 transition-all ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className={`h-4 w-4 ${isSelected ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      <span className={`text-sm font-medium ${isSelected ? 'text-emerald-800' : 'text-slate-700'}`}>
+                        {pilot.name}
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs text-slate-500">{pilot.id}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">Fatigue Score</span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        isSelected ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {pilot.fatigueScore}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500">ETA</span>
+                      <span className="text-xs font-medium text-slate-700">{pilot.availabilityEta}</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {/* Validation Rules */}
@@ -228,7 +231,10 @@ export default function RosterSwapModal({
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(swapId)}
+            onClick={() => {
+              const selectedPilot = replacementPilots.find(p => p.id === selectedPilotId);
+              if (selectedPilot) onConfirm(selectedPilot);
+            }}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-indigo-700 hover:shadow"
           >
             Confirm Swap

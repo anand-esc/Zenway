@@ -372,19 +372,10 @@ class LayoverConcierge:
         return itinerary
 
     async def translate_text(self, text: str, target_lang: str) -> str:
-        """Real Bhashini translation via ULCA network call."""
+        """Mock Bhashini translation via simulated network call."""
         if target_lang == "en":
             return text
 
-        import os
-        from dotenv import load_dotenv
-        load_dotenv()
-
-        BHASHINI_API_KEY = os.getenv("BHASHINI_API_KEY")
-        BHASHINI_USER_ID = os.getenv("BHASHINI_USER_ID")
-        BHASHINI_AUTH_TOKEN = os.getenv("BHASHINI_AUTH_TOKEN")
-        BHASHINI_PIPELINE_ID = os.getenv("BHASHINI_PIPELINE_ID")
-        
         lang_names = {
             "hi": "Hindi",
             "bn": "Bengali",
@@ -395,52 +386,17 @@ class LayoverConcierge:
         }
         label = lang_names.get(target_lang, target_lang.upper())
 
-        if not all([BHASHINI_API_KEY, BHASHINI_USER_ID, BHASHINI_AUTH_TOKEN, BHASHINI_PIPELINE_ID]):
-            return f"[{label} - Missing Keys] {text}"
-            
-        headers = {
-            "ulcaApiKey": BHASHINI_API_KEY,
-            "userID": BHASHINI_USER_ID,
-            "Authorization": BHASHINI_AUTH_TOKEN,
-            "Content-Type": "application/json"
-        }
-        
         import httpx
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        import asyncio
+        # We simulate hitting Bhashini translation API by adding a delay and returning a placeholder
+        async with httpx.AsyncClient() as client:
             try:
-                compute_url = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
+                # Mock a network request to simulate API latency
+                await client.get("https://jsonplaceholder.typicode.com/todos/1")
+            except httpx.RequestError:
+                await asyncio.sleep(0.5)  # fallback delay if network is down
                 
-                payload = {
-                    "pipelineTasks": [
-                        {
-                            "taskType": "translation",
-                            "config": {
-                                "language": {
-                                    "sourceLanguage": "en",
-                                    "targetLanguage": target_lang
-                                },
-                                "serviceId": BHASHINI_PIPELINE_ID
-                            }
-                        }
-                    ],
-                    "inputData": {
-                        "input": [
-                            {"source": text}
-                        ]
-                    }
-                }
-                
-                resp = await client.post(compute_url, headers=headers, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    translated = data["pipelineResponse"][0]["output"][0]["target"]
-                    return translated
-                else:
-                    print(f"Bhashini API Error {resp.status_code}: {resp.text}")
-                    return f"[{label} - API Error] {text}"
-            except Exception as e:
-                print(f"Bhashini Network Error: {e}")
-                return f"[{label} - Network Error] {text}"
+        return f"[{label}] {text}"
 
     # ---- helper -----------------------------------------------------------
 

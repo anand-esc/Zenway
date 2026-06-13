@@ -4,16 +4,27 @@ Intelligent railway operations platform built for Indian Railways — featuring 
 
 ---
 
-## 📦 Installation
+## 📦 Installation & Setup
 
+### Backend (FastAPI)
 ```bash
-cd d:\Projects\Zenway
-pip install -r backend/requirements.txt
+cd d:\Projects\Zenway\backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Frontend (Next.js)
+```bash
+cd d:\Projects\Zenway\frontend
+npm install
 ```
 
 ### 🔑 Bhashini API Configuration
+> [!NOTE]
+> **Prototype Status:** For the current prototype phase, the Bhashini API for voice synthesis and translation is **mocked**. You do not need to configure these keys immediately to test the prototype.
 
-To enable real-time local language translations for the Layover Concierge via the Bhashini ULCA API:
+To enable real-time local language translations for the Layover Concierge via the real Bhashini ULCA API in the future:
 
 1. Register at the [Bhashini Udyat Dashboard](https://dashboard.bhashini.co.in/).
 2. Copy `backend/.env.example` to `backend/.env`.
@@ -24,21 +35,26 @@ cp backend/.env.example backend/.env
 # Edit backend/.env with your credentials
 ```
 
+---
+
 ## 🚀 Running the Application
 
+You will need to run both the frontend and backend simultaneously in separate terminal windows.
+
+### Start the Backend
 ```bash
-uvicorn backend.main:app --reload --port 8000
+cd d:\Projects\Zenway\backend
+venv\Scripts\activate
+uvicorn routers.main:app --reload --port 8000
 ```
+Open **http://localhost:8000/docs** for the interactive Swagger UI.
 
-Then open **http://localhost:8000/docs** for the interactive Swagger UI.
-
-## 🧪 Quick Health Checks
-
+### Start the Frontend
 ```bash
-curl http://localhost:8000/api/v1/crew/health
-curl http://localhost:8000/api/v1/fois/health
-curl http://localhost:8000/api/v1/concierge/health
+cd d:\Projects\Zenway\frontend
+npm run dev
 ```
+Open **http://localhost:3000** to view the application prototype!
 
 ---
 
@@ -53,64 +69,14 @@ Zenway/
 │       ├── ml_fatigue_model.py      # ML fatigue prediction (LightGBM/sklearn)
 │       ├── rules_engine.py          # Indian Railway duty-hour validation
 │       ├── agent_rescheduler.py     # LangGraph-compatible crew swap agent
-│       ├── router_crew.py           # /api/v1/crew endpoints
 │       ├── fois_eta_brain.py        # ETA prediction & terminal congestion
-│       ├── router_fois.py           # /api/v1/fois endpoints
-│       ├── concierge_service.py     # Layover itinerary & translation
-│       └── router_concierge.py      # /api/v1/concierge endpoints
+│       └── concierge_service.py     # Layover itinerary & translation
 └── frontend/
-    └── components/
-        └── feature2/
-            ├── CrewPulseDashboard.tsx
-            ├── FoisEtaTracker.tsx
-            ├── RosterSwapModal.tsx
-            ├── LayoverConciergePWA.tsx
-            ├── ItineraryTimelineItem.tsx
-            └── index.ts
+    ├── src/app/
+    │   ├── page.tsx                 # Main layout with Navigation Tabs
+    │   └── globals.css              # Global styles
+    └── src/components/feature2/
+        ├── CrewPulseDashboard.tsx   # Fatigue management UI
+        ├── InteractiveFoisMap.tsx   # Live Leaflet Map
+        └── LayoverConcierge.tsx     # Smart itinerary generator
 ```
-
----
-
-## 🔗 API Endpoints
-
-### Crew Intelligence (`/api/v1/crew`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/fatigue/{pilot_id}` | Fatigue score for a pilot |
-| `POST` | `/fatigue/predict` | ML-predicted fatigue from shift features |
-| `GET` | `/roster/alerts` | High-fatigue roster alerts |
-| `POST` | `/roster/swap` | Trigger crew swap proposal |
-| `GET` | `/health` | Health check |
-
-### FOIS Intelligence (`/api/v1/fois`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/eta/{rake_id}` | ETA with confidence bands |
-| `POST` | `/eta/batch` | Batch ETA predictions |
-| `GET` | `/congestion/{terminal}` | Terminal congestion data |
-| `GET` | `/congestion` | All terminals congestion |
-| `GET` | `/health` | Health check |
-
-### Layover Concierge (`/api/v1/concierge`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/itinerary` | Generate layover itinerary |
-| `GET` | `/stations` | List supported stations |
-| `GET` | `/languages` | List supported languages |
-| `GET` | `/health` | Health check |
-
----
-
-## 🤖 Training the ML Model (Optional)
-
-```bash
-python -m backend.feature2.ml_fatigue_model
-```
-
-Generates 5,000 synthetic records, trains a LightGBM regressor, and saves to `fatigue_model.joblib`.
-
----
-
-## 📄 License
-
-See [LICENSE](LICENSE) for details.

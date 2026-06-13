@@ -28,6 +28,18 @@ class ConfidenceBand(BaseModel):
     on_time: float = Field(..., ge=0, le=1)
     delayed: float = Field(..., ge=0, le=1)
 
+class RakeResponse(BaseModel):
+    rake_id: str
+    origin: str
+    destination: str
+    expected_arrival: str
+    status: str
+
+class AllRakesResponse(BaseModel):
+    count: int
+    rakes: List[RakeResponse]
+    generated_at: str
+
 class ETAResponse(BaseModel):
     rake_id: str
     origin: str
@@ -116,6 +128,28 @@ async def get_eta(
     prediction["factors"] = delay_factors
 
     return ETAResponse(**prediction)
+
+@router.get("/rakes", response_model=AllRakesResponse)
+async def get_all_rakes(db: Session = Depends(get_db)) -> AllRakesResponse:
+    db_rakes = db.query(models.Rake).all()
+    
+    rakes = []
+    for r in db_rakes:
+        rakes.append(
+            RakeResponse(
+                rake_id=r.rake_id,
+                origin=r.origin,
+                destination=r.destination,
+                expected_arrival=r.expected_arrival,
+                status=r.status
+            )
+        )
+        
+    return AllRakesResponse(
+        count=len(rakes),
+        rakes=rakes,
+        generated_at=datetime.utcnow().isoformat() + "Z"
+    )
 
 @router.post("/eta/batch", response_model=BatchETAResponse)
 async def batch_eta(body: BatchETARequest) -> BatchETAResponse:

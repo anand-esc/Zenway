@@ -15,21 +15,23 @@ export interface ItineraryTimelineItemProps {
   timeSlot: string;
   title: string;
   description: string;
-  category: 'food' | 'sightseeing' | 'rest' | 'medical' | 'shopping';
+  category: string;
   distanceKm: number;
   walkingMinutes: number;
   isLast?: boolean;
 }
 
 const categoryConfig: Record<
-  ItineraryTimelineItemProps['category'],
+  string,
   { icon: React.ElementType; color: string; bg: string }
 > = {
   food: { icon: Utensils, color: 'text-orange-600', bg: 'bg-orange-50' },
   sightseeing: { icon: Camera, color: 'text-blue-600', bg: 'bg-blue-50' },
+  attraction: { icon: Camera, color: 'text-blue-600', bg: 'bg-blue-50' },
   rest: { icon: BedDouble, color: 'text-indigo-600', bg: 'bg-indigo-50' },
   medical: { icon: Stethoscope, color: 'text-rose-600', bg: 'bg-rose-50' },
   shopping: { icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  default: { icon: MapPin, color: 'text-slate-600', bg: 'bg-slate-50' },
 };
 
 export default function ItineraryTimelineItem({
@@ -41,7 +43,7 @@ export default function ItineraryTimelineItem({
   walkingMinutes,
   isLast = false,
 }: ItineraryTimelineItemProps) {
-  const config = categoryConfig[category];
+  const config = categoryConfig[category] || categoryConfig['default'];
   const Icon = config.icon;
 
   return (

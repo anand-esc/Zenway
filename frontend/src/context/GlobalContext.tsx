@@ -1,0 +1,76 @@
+'use client';
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+type Theme = 'light' | 'dark';
+
+export interface Alert {
+  id: string;
+  source: 'crew' | 'fois' | 'concierge' | 'system';
+  message: string;
+  level: 'info' | 'warning' | 'critical';
+  timestamp: Date;
+}
+
+interface GlobalContextType {
+  theme: Theme;
+  toggleTheme: () => void;
+  alerts: Alert[];
+  addAlert: (alert: Omit<Alert, 'id' | 'timestamp'>) => void;
+  dismissAlert: (id: string) => void;
+  clearAlerts: () => void;
+}
+
+const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
+
+export function GlobalProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('light');
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+
+  // Apply theme to document
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const addAlert = (alert: Omit<Alert, 'id' | 'timestamp'>) => {
+    setAlerts(prev => [
+      {
+        ...alert,
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date(),
+      },
+      ...prev,
+    ]);
+  };
+
+  const dismissAlert = (id: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  };
+
+  const clearAlerts = () => {
+    setAlerts([]);
+  };
+
+  return (
+    <GlobalContext.Provider value={{ theme, toggleTheme, alerts, addAlert, dismissAlert, clearAlerts }}>
+      {children}
+    </GlobalContext.Provider>
+  );
+}
+
+export function useGlobal() {
+  const context = useContext(GlobalContext);
+  if (context === undefined) {
+    throw new Error('useGlobal must be used within a GlobalProvider');
+  }
+  return context;
+}
